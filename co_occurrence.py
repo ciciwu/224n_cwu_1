@@ -6,6 +6,7 @@ import numpy as np
 import scipy as sp
 from sklearn.decomposition import TruncatedSVD
 from sklearn.decomposition import PCA
+from itertools import combinations
 
 sys.path.append(os.path.abspath(os.path.join('..')))
 
@@ -21,8 +22,11 @@ def distinct_words(corpus):
     """
     corpus_words = []
     num_corpus_words = -1
+    corpus_words = list(set([w for s in corpus_words for w in s]))
     
 ### SOLUTION BEGIN
+    corpus_words = list(set([w for s in corpus_words for w in s]))
+    num_corpus_words = len(corpus_words)
 ### SOLUTION END
 
     return corpus_words, num_corpus_words
@@ -51,6 +55,22 @@ def compute_co_occurrence_matrix(corpus, window_size=4):
     word2Ind = {}
     
 ### SOLUTION BEGIN
+    M = np.zeros(shape = (num_words,num_words))
+    word2Ind = { k:v for v, k in enumerate(words)}
+    ngram = []
+    for sentence in corpus:
+        l = len(sentence)
+        for i in range(l):
+            start_idx = max(0,i-window_size)
+            end_idx = min(l, i+window_size)
+            ngram.append(sentence[start_idx:(end_idx+1)])
+    pairs = []
+    for g in ngram:
+        pairs.extend(list(combinations(g, 2)))
+    for p in pairs:
+        M[word2Ind[p[0]]][word2Ind[p[1]]] +=1
+        M[word2Ind[p[1]]][word2Ind[p[0]]] +=1
+
 ### SOLUTION END
 
     return M, word2Ind
@@ -74,6 +94,8 @@ def reduce_to_k_dim(M, k=2):
     print("Running Truncated SVD over %i words..." % (M.shape[0]))
     
     ### SOLUTION BEGIN
+    svd = TruncatedSVD(n_components=k,n_iter = n_iters)
+    M_reduced = svd.fit_transform(M)
     ### SOLUTION END
 
     print("Done.")
